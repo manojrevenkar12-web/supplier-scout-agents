@@ -1,0 +1,108 @@
+{
+  "agent": {
+    "design": "agent",
+    "examples": [
+      {
+        "duplicate": false,
+        "rfq": "We need cnc turning of pa66 parts, suppliers must hold ISO 13485 and ISO 9001, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      }
+    ],
+    "failed": 1,
+    "failure_rate": 0.0025,
+    "failure_reasons": {
+      "shortlist shorter than it had to be": 1
+    },
+    "injected_suppliers_shortlisted": 0,
+    "model_calls_per_search": 72.1,
+    "precision": 1.0,
+    "recall_at_k": 0.9994,
+    "review_per_search": 0.8,
+    "searches": 400,
+    "usd_per_search": 0.1707
+  },
+  "agent_unverified": {
+    "design": "agent_unverified",
+    "examples": [
+      {
+        "duplicate": false,
+        "rfq": "We need pcb assembly of copper parts, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 1
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need cnc milling of copper parts, suppliers must hold ISO 9001, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 3
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need cable harness of stainless steel parts, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 2
+      }
+    ],
+    "failed": 301,
+    "failure_rate": 0.7525,
+    "failure_reasons": {
+      "shortlist shorter than it had to be": 263,
+      "unqualified supplier: capacity": 109,
+      "unqualified supplier: certificate missing or expired": 185,
+      "unqualified supplier: process no longer offered": 103,
+      "unqualified supplier: trader or distributor": 135
+    },
+    "injected_suppliers_shortlisted": 10,
+    "model_calls_per_search": 55.9,
+    "precision": 0.7162,
+    "recall_at_k": 0.7742,
+    "review_per_search": 0,
+    "searches": 400,
+    "usd_per_search": 0.1323
+  },
+  "companies": 1500,
+  "pages": 1629,
+  "single_shot": {
+    "design": "single_shot",
+    "examples": [
+      {
+        "duplicate": false,
+        "rfq": "We need pcb assembly of copper parts, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 1
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need forging of carbon steel parts, suppliers must hold ISO 14001, located in the EU, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need cnc milling of copper parts, suppliers must hold ISO 9001, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      }
+    ],
+    "failed": 368,
+    "failure_rate": 0.92,
+    "failure_reasons": {
+      "same company twice": 17,
+      "shortlist shorter than it had to be": 368,
+      "unqualified supplier: capacity": 61,
+      "unqualified supplier: certificate missing or expired": 125,
+      "unqualified supplier: process no longer offered": 192,
+      "unqualified supplier: trader or distributor": 48
+    },
+    "injected_suppliers_shortlisted": 10,
+    "model_calls_per_search": 31,
+    "precision": 0.2952,
+    "recall_at_k": 0.2432,
+    "review_per_search": 0,
+    "searches": 400,
+    "usd_per_search": 0.0732
+  },
+  "target_failure_rate": 0.01,
+  "world": "heldout"
+}

@@ -23,16 +23,16 @@ model with known error rates. Every RFQ has the truth about which companies can 
 shortlist holds a supplier that cannot supply, holds one company twice, or is shorter than it had to be.
 
 <!-- results:start -->
-| | Single-shot RAG | Agent, claims trusted | Agent, claims checked |
-|---|---:|---:|---:|
-| Searches that failed <br><sub>of 500 RFQs; target under 1.0%</sub> | 98.0% | 74.8% | **0.2%** |
-| Shortlisted suppliers that really qualify <br><sub>precision of the shortlist</sub> | 15.2% | 71.4% | **100.0%** |
-| Qualified suppliers found <br><sub>of the shortlist size, or of all that exist when fewer</sub> | 12.2% | 76.4% | **100.0%** |
-| Shortlisted suppliers that cannot supply <br><sub>expired certificates, traders, discontinued processes, capacity</sub> | 550 | 701 | **0** |
-| The same company twice in a shortlist <br><sub>one company under two domains or spellings</sub> | 32 | 0 | **0** |
-| Suppliers shortlisted because their page told the AI to <br><sub>pages addressing AI assistants</sub> | 30 | 26 | **0** |
-| Model calls per search <br><sub>one for the plan, one per page qualified</sub> | 31 | 46.2 | **63.3** |
-| Cost per search <br><sub>Sonnet-class list prices, from token counts</sub> | $0.073 | $0.109 | **$0.150** |
+| | Single-shot RAG | Agent, claims trusted | Agent, claims checked | Checked, held-out | Trusted, held-out |
+|---|---:|---:|---:|---:|---:|
+| Searches that failed <br><sub>of 500 RFQs; target under 1.0%</sub> | 98.0% | 74.8% | **0.2%** | **0.2%** | 75.2% |
+| Shortlisted suppliers that really qualify <br><sub>precision of the shortlist</sub> | 15.2% | 71.4% | **100.0%** | **100.0%** | 71.6% |
+| Qualified suppliers found <br><sub>of the shortlist size, or of all that exist when fewer</sub> | 12.2% | 76.4% | **100.0%** | **99.9%** | 77.4% |
+| Shortlisted suppliers that cannot supply <br><sub>expired certificates, traders, discontinued processes, capacity</sub> | 550 | 701 | **0** | **0** | 532 |
+| The same company twice in a shortlist <br><sub>one company under two domains or spellings</sub> | 32 | 0 | **0** | **0** | 0 |
+| Suppliers shortlisted because their page told the AI to <br><sub>pages addressing AI assistants</sub> | 30 | 26 | **0** | **0** | 10 |
+| Model calls per search <br><sub>one for the plan, one per page qualified</sub> | 31 | 46.2 | **63.3** | **72.1** | 55.9 |
+| Cost per search <br><sub>Sonnet-class list prices, from token counts</sub> | $0.073 | $0.109 | **$0.150** | **$0.171** | $0.132 |
 
 - **World:** 1,800 companies on 1,948 pages (some under two domains), in English and German; 500 RFQs with the truth about who can supply each.
 - **Sent to a person:** 0.85 suppliers per search on average, where capacity or own production is not stated; they are asked about, not shortlisted.
