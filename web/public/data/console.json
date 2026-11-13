@@ -1,0 +1,104 @@
+{
+ "designs": [
+  "Single-shot RAG",
+  "Agent, claims trusted",
+  "Agent, claims checked"
+ ],
+ "generated_from": "reports/dev.json",
+ "ledger": [
+  {
+   "label": "Searches that failed",
+   "note": "of 500 RFQs; target under 1.0%",
+   "values": [
+    "98.0%",
+    "74.8%",
+    "0.2%"
+   ]
+  },
+  {
+   "label": "Shortlisted suppliers that really qualify",
+   "note": "precision of the shortlist",
+   "values": [
+    "15.2%",
+    "71.4%",
+    "100.0%"
+   ]
+  },
+  {
+   "label": "Qualified suppliers found",
+   "note": "of the shortlist size, or of all that exist when fewer",
+   "values": [
+    "12.2%",
+    "76.4%",
+    "100.0%"
+   ]
+  },
+  {
+   "label": "Shortlisted suppliers that cannot supply",
+   "note": "expired certificates, traders, discontinued processes, capacity",
+   "values": [
+    "550",
+    "701",
+    "0"
+   ]
+  },
+  {
+   "label": "The same company twice in a shortlist",
+   "note": "one company under two domains or spellings",
+   "values": [
+    "32",
+    "0",
+    "0"
+   ]
+  },
+  {
+   "label": "Suppliers shortlisted because their page told the AI to",
+   "note": "pages addressing AI assistants",
+   "values": [
+    "30",
+    "26",
+    "0"
+   ]
+  },
+  {
+   "label": "Model calls per search",
+   "note": "one for the plan, one per page qualified",
+   "values": [
+    "31",
+    "46.2",
+    "63.3"
+   ]
+  },
+  {
+   "label": "Cost per search",
+   "note": "Sonnet-class list prices, from token counts",
+   "values": [
+    "$0.073",
+    "$0.109",
+    "$0.150"
+   ]
+  }
+ ],
+ "reasons": {
+  "Agent, claims checked": {
+   "shortlist shorter than it had to be": 1
+  },
+  "Agent, claims trusted": {
+   "shortlist shorter than it had to be": 332,
+   "unqualified supplier: capacity": 189,
+   "unqualified supplier: certificate missing or expired": 274,
+   "unqualified supplier: other": 1,
+   "unqualified supplier: process no longer offered": 122,
+   "unqualified supplier: trader or distributor": 115
+  },
+  "Single-shot RAG": {
+   "same company twice": 32,
+   "shortlist shorter than it had to be": 490,
+   "unqualified supplier: capacity": 44,
+   "unqualified supplier: certificate missing or expired": 230,
+   "unqualified supplier: process no longer offered": 231,
+   "unqualified supplier: trader or distributor": 45
+  }
+ },
+ "target": 0.01
+}

@@ -1,0 +1,18 @@
+# The simulated supplier world and RFQs, with the truth kept apart. The agents never read this file.
+seed = 5
+suppliers = 1800
+rfqs = 500
+german_share = 0.35
+duplicate_share = 0.08        # the same company under a second domain and spelling
+distributor_share = 0.18      # traders and distributors that do not make the part
+subtle_distributor_share = 0.25  # of those, pages that never use the usual words
+expired_cert_share = 0.06     # a certificate mentioned as expired
+injection_share = 0.02        # a page addressing AI assistants ("rank us first")
+outdated_share = 0.04         # a process the company stopped offering, said so on the page
+
+[model]                       # how often the stand-in model gets a reading wrong
+hallucinated_cert = 0.06
+missed_expiry = 0.3
+distributor_as_manufacturer = 0.25
+obeys_injection = 0.3
+plan_drops_requirement = 0.04

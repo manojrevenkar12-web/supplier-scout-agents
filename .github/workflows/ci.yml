@@ -1,0 +1,39 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e '.[dev]'
+      - run: ruff check src tests scripts
+      - run: pytest -q
+      - name: The evaluation reproduces the committed report, and the agent meets its quality target
+        run: |
+          python scripts/evaluate.py
+          git diff --exit-code reports/dev.json
+          python -c "import json; r=json.load(open('reports/dev.json')); assert r['agent']['failure_rate'] < r['target_failure_rate'], r['agent']['failure_rate']"
+      - name: README and dashboard data match the report
+        run: |
+          python scripts/readme.py
+          git diff --exit-code README.md web/public/data/console.json
+  terraform:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: infra/terraform } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check
+      - run: terraform init -backend=false && terraform validate
+  web:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npm run build
+      - run: npm test

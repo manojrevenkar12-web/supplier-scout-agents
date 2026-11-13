@@ -1,0 +1,22 @@
+@import "@fontsource-variable/schibsted-grotesk";
+@import "./tokens.css";
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: var(--step-0); line-height: var(--leading-body); }
+:focus-visible { outline: var(--focus); outline-offset: var(--space-1); }
+.page { max-width: var(--page); margin: 0 auto; padding: var(--space-6) var(--space-5) var(--space-7); }
+.masthead { display: grid; gap: var(--space-4); margin-bottom: var(--space-6); }
+.masthead h1 { margin: 0; font-size: var(--step-4); line-height: var(--leading-tight); font-weight: 800; letter-spacing: -0.02em; }
+.masthead h1 span { display: block; }
+.masthead p { margin: 0; max-width: var(--measure); color: var(--ink-soft); font-size: var(--step-1); }
+.section { margin-top: var(--space-7); }
+.section > h2 { margin: 0 0 var(--space-2); font-size: var(--step-2); font-weight: 750; }
+.section > .lede { margin: 0 0 var(--space-5); max-width: var(--measure); color: var(--ink-soft); }
+.panel { background: var(--sheet); border: var(--border) solid var(--rule); border-radius: var(--radius); }
+.state { padding: var(--space-6); display: grid; gap: var(--space-3); justify-items: start; }
+.state button { font: inherit; font-weight: 650; padding: var(--space-2) var(--space-4); border: var(--border) solid var(--ink); background: var(--sheet); border-radius: var(--radius); cursor: pointer; }
+.skeleton { height: var(--space-5); background: linear-gradient(90deg, var(--rule), var(--sheet), var(--rule)); background-size: 200% 100%; animation: shimmer 1.4s infinite linear; border-radius: var(--radius); }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+.muted { color: var(--mute); }
+@media (max-width: 40rem) { .masthead h1 { font-size: var(--step-2); } .page { padding: var(--space-5) var(--space-4); } }

@@ -1,0 +1,109 @@
+{
+  "agent": {
+    "design": "agent",
+    "examples": [
+      {
+        "duplicate": false,
+        "rfq": "We need forging of abs parts, suppliers must hold ISO 14001 and ISO 13485, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      }
+    ],
+    "failed": 1,
+    "failure_rate": 0.002,
+    "failure_reasons": {
+      "shortlist shorter than it had to be": 1
+    },
+    "injected_suppliers_shortlisted": 0,
+    "model_calls_per_search": 63.3,
+    "precision": 1.0,
+    "recall_at_k": 0.9996,
+    "review_per_search": 0.85,
+    "searches": 500,
+    "usd_per_search": 0.1498
+  },
+  "agent_unverified": {
+    "design": "agent_unverified",
+    "examples": [
+      {
+        "duplicate": false,
+        "rfq": "We need injection molding of pa66 parts, suppliers must hold ISO 14001 and ISO 9001, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
+        "short": false,
+        "wrong": 2
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need cable harness of aluminium parts, suppliers must hold ISO 9001, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 3
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need cnc milling of stainless steel parts, suppliers must hold ISO 9001, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 3
+      }
+    ],
+    "failed": 374,
+    "failure_rate": 0.748,
+    "failure_reasons": {
+      "shortlist shorter than it had to be": 332,
+      "unqualified supplier: capacity": 189,
+      "unqualified supplier: certificate missing or expired": 274,
+      "unqualified supplier: other": 1,
+      "unqualified supplier: process no longer offered": 122,
+      "unqualified supplier: trader or distributor": 115
+    },
+    "injected_suppliers_shortlisted": 26,
+    "model_calls_per_search": 46.2,
+    "precision": 0.714,
+    "recall_at_k": 0.7643,
+    "review_per_search": 0,
+    "searches": 500,
+    "usd_per_search": 0.1091
+  },
+  "companies": 1800,
+  "pages": 1948,
+  "single_shot": {
+    "design": "single_shot",
+    "examples": [
+      {
+        "duplicate": false,
+        "rfq": "We need injection molding of pa66 parts, suppliers must hold ISO 14001 and ISO 9001, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need cable harness of aluminium parts, suppliers must hold ISO 9001, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 4
+      },
+      {
+        "duplicate": true,
+        "rfq": "We need pcb assembly of stainless steel parts, suppliers must hold ISO 14001, located in the EU, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 2
+      }
+    ],
+    "failed": 490,
+    "failure_rate": 0.98,
+    "failure_reasons": {
+      "same company twice": 32,
+      "shortlist shorter than it had to be": 490,
+      "unqualified supplier: capacity": 44,
+      "unqualified supplier: certificate missing or expired": 230,
+      "unqualified supplier: process no longer offered": 231,
+      "unqualified supplier: trader or distributor": 45
+    },
+    "injected_suppliers_shortlisted": 30,
+    "model_calls_per_search": 31,
+    "precision": 0.1516,
+    "recall_at_k": 0.122,
+    "review_per_search": 0,
+    "searches": 500,
+    "usd_per_search": 0.0732
+  },
+  "target_failure_rate": 0.01,
+  "world": "dev"
+}

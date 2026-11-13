@@ -1,0 +1,24 @@
+# Settings of the agents. The simulated world never reads this file.
+
+[search]
+shortlist_size = 5          # suppliers a buyer gets per RFQ
+first_pass_candidates = 30  # retrieved before qualification
+widen_factor = 3            # each reflection retrieves this many times more, with synonyms in both languages
+max_reflections = 2
+rrf_k = 60                  # reciprocal rank fusion constant for BM25 + TF-IDF
+
+[verify]
+evidence_min_chars = 12     # a quoted piece of evidence must be at least this long and appear in the page
+
+[cost]
+input_usd_per_mtok = 3.0    # Claude Sonnet-class list price per million input tokens
+output_usd_per_mtok = 15.0
+chars_per_token = 4
+max_usd_per_search = 0.60   # the search stops qualifying and returns what it has
+
+[quality]
+target_failure_rate = 0.01  # the search agent's quality target: under 1% of searches fail
+
+[model]
+provider = "simulated"      # "anthropic" calls the Messages API
+anthropic_model = "claude-sonnet-4-5"
