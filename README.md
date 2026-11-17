@@ -107,7 +107,19 @@ the cost limit, and no regression on the drifted world against the reader in pro
 ## Held-out world (run once)
 
 <!-- heldout:start -->
-Not run yet: `python3 scripts/evaluate.py --world heldout`, once (see AGENTS.md).
+Seed and companies not seen before, a quarter of the facts in the drifted wording, reader `v2`, run once at the commit in `config/heldout.lock`.
+
+| | Single-shot RAG | Agent, claims trusted | Agent, keyword checks | Agent, stance reader + model fallback | Stance reader, no fallback |
+|---|---:|---:|---:|---:|---:|
+| Searches that failed <br><sub>of 400 RFQs; target under 1.0%</sub> | 79.0% | 75.0% | 41.2% | **0.0%** | 0.0% |
+| Shortlisted suppliers that really qualify <br><sub>precision of the shortlist</sub> | 67.5% | 67.3% | 92.9% | **100.0%** | 100.0% |
+| Qualified suppliers found <br><sub>of the shortlist size, or of all that exist when fewer</sub> | 60.4% | 76.4% | 80.2% | **100.0%** | 100.0% |
+| Shortlisted suppliers that cannot supply <br><sub>lapsed certificates, traders, processes sold, capacity</sub> | 423 | 613 | 48 | **0** | 0 |
+| The same company twice in a shortlist <br><sub>one company under two domains or spellings</sub> | 10 | 0 | 0 | **0** | 0 |
+| Suppliers shortlisted because their page told the AI to <br><sub>pages addressing AI assistants</sub> | 18 | 55 | 3 | **0** | 0 |
+| Model calls per search <br><sub>the plan, then one per page, or only for sentences the reader is unsure of</sub> | 31 | 67.3 | 146.9 | **1.0** | 1 |
+| Cost per search <br><sub>Sonnet-class list prices, from token counts</sub> | $0.0751 | $0.1638 | $0.3593 | **$0.0017** | $0.0017 |
+| Suppliers sent to a person per search <br><sub>a deciding sentence unclear, or capacity not stated</sub> | 0 | 0 | 8.96 | **1.9** | 2.77 |
 <!-- heldout:end -->
 
 The first version of this repository (keyword checks only) had its own held-out run on the phrasing of that time;

@@ -1,0 +1,244 @@
+{
+  "agent": {
+    "design": "agent",
+    "examples": [
+      {
+        "duplicate": false,
+        "rfq": "We need cnc milling of abs parts, suppliers must hold ISO 13485 and ISO 14001, manufacturers only, no traders.",
+        "short": false,
+        "wrong": 1
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need forging of aluminium parts, suppliers must hold ISO 13485, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need injection molding of copper parts, suppliers must hold IATF 16949, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      }
+    ],
+    "failed": 165,
+    "failure_rate": 0.4125,
+    "failure_reasons": {
+      "shortlist shorter than it had to be": 163,
+      "unqualified supplier: certificate missing or expired": 30,
+      "unqualified supplier: process no longer offered": 18
+    },
+    "injected_suppliers_shortlisted": 3,
+    "model_calls_per_search": 146.9,
+    "precision": 0.9292,
+    "reading": {
+      "confidence_hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "novel": 0,
+      "sentences": 0,
+      "unsure": 0
+    },
+    "recall_at_k": 0.8017,
+    "review_per_search": 8.96,
+    "searches": 400,
+    "sentences_asked": 0,
+    "usd_per_search": 0.3593
+  },
+  "agent_reader": {
+    "design": "agent_reader",
+    "examples": [],
+    "failed": 0,
+    "failure_rate": 0.0,
+    "failure_reasons": {},
+    "injected_suppliers_shortlisted": 0,
+    "model_calls_per_search": 1.0,
+    "precision": 1.0,
+    "reading": {
+      "confidence_hist": [
+        938,
+        0,
+        0,
+        0,
+        0,
+        0,
+        330,
+        0,
+        0,
+        396672
+      ],
+      "novel": 938,
+      "sentences": 397940,
+      "unsure": 938
+    },
+    "recall_at_k": 1.0,
+    "review_per_search": 1.9,
+    "searches": 400,
+    "sentences_asked": 1,
+    "usd_per_search": 0.0017
+  },
+  "agent_unverified": {
+    "design": "agent_unverified",
+    "examples": [
+      {
+        "duplicate": false,
+        "rfq": "We need cnc milling of abs parts, suppliers must hold ISO 13485 and ISO 14001, manufacturers only, no traders.",
+        "short": false,
+        "wrong": 3
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need forging of copper parts, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 1
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need forging of aluminium parts, suppliers must hold ISO 13485, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 2
+      }
+    ],
+    "failed": 300,
+    "failure_rate": 0.75,
+    "failure_reasons": {
+      "shortlist shorter than it had to be": 251,
+      "unqualified supplier: capacity": 155,
+      "unqualified supplier: certificate missing or expired": 276,
+      "unqualified supplier: other": 5,
+      "unqualified supplier: process no longer offered": 35,
+      "unqualified supplier: trader or distributor": 142
+    },
+    "injected_suppliers_shortlisted": 55,
+    "model_calls_per_search": 67.3,
+    "precision": 0.673,
+    "reading": {
+      "confidence_hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "novel": 0,
+      "sentences": 0,
+      "unsure": 0
+    },
+    "recall_at_k": 0.7641,
+    "review_per_search": 0,
+    "searches": 400,
+    "sentences_asked": 0,
+    "usd_per_search": 0.1638
+  },
+  "companies": 1500,
+  "pages": 1599,
+  "reader": "v2",
+  "reader_only": {
+    "design": "reader_only",
+    "examples": [],
+    "failed": 0,
+    "failure_rate": 0.0,
+    "failure_reasons": {},
+    "injected_suppliers_shortlisted": 0,
+    "model_calls_per_search": 1,
+    "precision": 1.0,
+    "reading": {
+      "confidence_hist": [
+        938,
+        0,
+        0,
+        0,
+        0,
+        0,
+        330,
+        0,
+        0,
+        396672
+      ],
+      "novel": 938,
+      "sentences": 397940,
+      "unsure": 938
+    },
+    "recall_at_k": 1.0,
+    "review_per_search": 2.77,
+    "searches": 400,
+    "sentences_asked": 0,
+    "usd_per_search": 0.0017
+  },
+  "rfqs": 400,
+  "single_shot": {
+    "design": "single_shot",
+    "examples": [
+      {
+        "duplicate": false,
+        "rfq": "We need cnc milling of abs parts, suppliers must hold ISO 13485 and ISO 14001, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 1
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need forging of copper parts, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 1
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need forging of aluminium parts, suppliers must hold ISO 13485, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      }
+    ],
+    "failed": 316,
+    "failure_rate": 0.79,
+    "failure_reasons": {
+      "same company twice": 10,
+      "shortlist shorter than it had to be": 305,
+      "unqualified supplier: capacity": 125,
+      "unqualified supplier: certificate missing or expired": 146,
+      "unqualified supplier: other": 2,
+      "unqualified supplier: process no longer offered": 23,
+      "unqualified supplier: trader or distributor": 127
+    },
+    "injected_suppliers_shortlisted": 18,
+    "model_calls_per_search": 31,
+    "precision": 0.6747,
+    "reading": {
+      "confidence_hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "novel": 0,
+      "sentences": 0,
+      "unsure": 0
+    },
+    "recall_at_k": 0.6035,
+    "review_per_search": 0,
+    "searches": 400,
+    "sentences_asked": 0,
+    "usd_per_search": 0.0751
+  },
+  "target_failure_rate": 0.01,
+  "world": "heldout"
+}
