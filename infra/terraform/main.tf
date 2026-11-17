@@ -1,5 +1,6 @@
-# GCP for the supplier search: the API and the agent worker on Cloud Run, searches over Pub/Sub with a dead-letter
-# topic, state in Firestore, the model key in Secret Manager, and an alert when the search failure rate passes 1%.
+# GCP for the supplier search: the API, the agent worker and the Argo retraining workflow on GKE Autopilot (manifests
+# in deploy/), searches over Pub/Sub with a dead-letter topic, state in Firestore, the model key in Secret Manager,
+# images in Artifact Registry, the stance reader in a models bucket, and alerts on short searches and novel wording.
 
 terraform {
   required_version = ">= 1.6"
@@ -16,11 +17,6 @@ variable "project" {
 variable "region" {
   type    = string
   default = "europe-west3" # Frankfurt
-}
-
-variable "image" {
-  description = "The container image built from this repository"
-  type        = string
 }
 
 variable "alert_email" {
@@ -86,46 +82,79 @@ resource "google_secret_manager_secret_iam_member" "scout" {
   member    = "serviceAccount:${google_service_account.scout.email}"
 }
 
-resource "google_cloud_run_v2_service" "service" {
-  for_each = { api = "uvicorn scout.service.main:app --host 0.0.0.0 --port 8080", worker = "python -m scout.service.worker" }
-  name     = "supplier-scout-${each.key}"
-  location = var.region
-  template {
-    service_account = google_service_account.scout.email
-    scaling {
-      min_instance_count = each.key == "worker" ? 1 : 0
-      max_instance_count = 10
-    }
-    containers {
-      image   = var.image
-      command = ["sh", "-c", each.value]
-      env {
-        name  = "GCP_PROJECT"
-        value = var.project
-      }
-      env {
-        name = "ANTHROPIC_API_KEY"
-        value_source {
-          secret_key_ref {
-            secret  = google_secret_manager_secret.anthropic.secret_id
-            version = "latest"
-          }
-        }
-      }
-      resources {
-        limits = { cpu = "2", memory = "2Gi" }
-      }
-    }
+resource "google_artifact_registry_repository" "scout" {
+  repository_id = "scout"
+  location      = var.region
+  format        = "DOCKER"
+}
+
+# the reader in production, its registry, and the supplier pages the API pods pull at start
+resource "google_storage_bucket" "models" {
+  name                        = "${var.project}-scout-models"
+  location                    = var.region
+  uniform_bucket_level_access = true
+  versioning {
+    enabled = true # a promoted reader can be rolled back to the previous object version
   }
 }
 
-# The agent logs one line per finished search with failed=true|false; the alert compares failures to searches.
-resource "google_logging_metric" "failed_searches" {
-  name   = "supplier_search_failed"
-  filter = "resource.type=\"cloud_run_revision\" AND jsonPayload.event=\"search_done\" AND jsonPayload.failed=true"
+resource "google_container_cluster" "scout" {
+  name                = "scout"
+  location            = var.region
+  enable_autopilot    = true
+  deletion_protection = true
+}
+
+resource "google_service_account" "trainer" {
+  account_id   = "scout-trainer"
+  display_name = "Retraining workflow (Argo): harvest, train, gate, publish"
+}
+
+resource "google_storage_bucket_iam_member" "readers" {
+  for_each = {
+    api     = { member = google_service_account.scout.email, role = "roles/storage.objectViewer" }
+    trainer = { member = google_service_account.trainer.email, role = "roles/storage.objectAdmin" }
+  }
+  bucket = google_storage_bucket.models.name
+  role   = each.value.role
+  member = "serviceAccount:${each.value.member}"
+}
+
+# Kubernetes service accounts act as the Google ones (workload identity): no keys in the cluster
+resource "google_service_account_iam_member" "workload_identity" {
+  for_each = {
+    "scout/scout"        = google_service_account.scout.name
+    "argo/scout-trainer" = google_service_account.trainer.name
+  }
+  service_account_id = each.value
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project}.svc.id.goog[${each.key}]"
+}
+
+# One log line per search (scout.ops.telemetry): searches that end short, and sentences in novel wording.
+resource "google_logging_metric" "short_searches" {
+  name   = "supplier_search_short"
+  filter = "resource.type=\"k8s_container\" AND jsonPayload.event=\"scout.search\" AND jsonPayload.short=true"
   metric_descriptor {
     metric_kind = "DELTA"
     value_type  = "INT64"
+  }
+}
+
+resource "google_logging_metric" "novel_sentences" {
+  name            = "supplier_search_novel_sentences"
+  filter          = "resource.type=\"k8s_container\" AND jsonPayload.event=\"scout.search\""
+  value_extractor = "EXTRACT(jsonPayload.novel)"
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type  = "DISTRIBUTION"
+  }
+  bucket_options {
+    exponential_buckets {
+      num_finite_buckets = 10
+      growth_factor      = 2
+      scale              = 1
+    }
   }
 }
 
@@ -136,12 +165,12 @@ resource "google_monitoring_notification_channel" "email" {
 }
 
 resource "google_monitoring_alert_policy" "failure_rate" {
-  display_name = "Supplier search failures"
+  display_name = "Supplier searches that end short"
   combiner     = "OR"
   conditions {
-    display_name = "failed searches in the last hour"
+    display_name = "short searches in the last hour"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/supplier_search_failed\" AND resource.type=\"cloud_run_revision\""
+      filter          = "metric.type=\"logging.googleapis.com/user/supplier_search_short\" AND resource.type=\"k8s_container\""
       comparison      = "COMPARISON_GT"
       threshold_value = 3
       duration        = "0s"
@@ -152,4 +181,12 @@ resource "google_monitoring_alert_policy" "failure_rate" {
     }
   }
   notification_channels = [google_monitoring_notification_channel.email.id]
+}
+
+output "models_bucket" {
+  value = google_storage_bucket.models.name
+}
+
+output "registry" {
+  value = "${var.region}-docker.pkg.dev/${var.project}/${google_artifact_registry_repository.scout.repository_id}"
 }

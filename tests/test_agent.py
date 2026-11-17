@@ -8,18 +8,32 @@ from scout.llm import AnthropicLLM, Usage
 from scout.models import Rfq
 from scout.service.app import Searches, create_app
 from scout.service.bus import MemoryBus
+from scout.verify import StanceCache
 from scout.world.sim import SimLLM
 
 
-def test_agent_shortlists_only_qualified_distinct_companies(world, index, settings):
-    llm = SimLLM(world)
+def test_reader_agent_shortlists_only_qualified_distinct_companies(world, index, settings, reader):
+    llm, cache = SimLLM(world), StanceCache()
     for rfq in world.rfqs[:15]:
-        graph, usage = build(index, llm, settings, "agent")
+        graph, usage = build(index, llm, settings, "agent_reader", reader=reader, cache=cache)
         out = graph.invoke({"rfq": rfq})
         ids = [world.page_company[v.supplier_id] for v in out["shortlist"]]
         assert set(ids) <= set(world.truth[rfq.id]["qualified"]), rfq.text
         assert len(ids) == len(set(ids))
-        assert usage.usd <= settings["cost"]["max_usd_per_search"] + 0.05
+        assert usage.calls >= 1 and usage.usd <= settings["monitor"]["max_usd_per_search"]
+        assert usage.reading["sentences"] > 0
+
+
+def test_keyword_checks_are_fooled_by_phrasing_they_were_not_written_for(world, index, settings):
+    """The reason for the reader: the keyword-checked agent shortlists suppliers whose pages say, in other words,
+    that a certificate lapsed or a process was sold."""
+    llm, wrong = SimLLM(world), 0
+    for rfq in world.rfqs:
+        out = build(index, llm, settings, "agent")[0].invoke({"rfq": rfq})
+        wrong += sum(
+            world.page_company[v.supplier_id] not in world.truth[rfq.id]["qualified"] for v in out["shortlist"]
+        )
+    assert wrong > 0
 
 
 def test_reflection_widens_and_caching_never_pays_twice(world, index, settings):
@@ -48,9 +62,9 @@ def test_plan_is_repaired_from_the_rfq_text(world, index, settings):
     assert lexicon_requirements("CNC-Fräsen von Edelstahl, IATF 16949")["process"] == ["cnc_milling"]
 
 
-def test_api_pubsub_and_human_review(world, index, settings):
+def test_api_pubsub_and_human_review(world, index, settings, reader):
     bus = MemoryBus()
-    searches = Searches(index, SimLLM(world), settings, bus)
+    searches = Searches(index, SimLLM(world), settings, bus, reader=reader)
     client = TestClient(create_app(searches))
     texts = [r.text for r in world.rfqs[:6]]
     ids = [client.post("/searches", json={"text": t}).json()["id"] for t in texts]
@@ -70,6 +84,8 @@ def test_api_pubsub_and_human_review(world, index, settings):
         done = client.post(f"/searches/{i}/review", json={"approved": [ask[0]["supplier_id"]]}).json()
         assert done["status"] == "done" and ask[0]["supplier_id"] in [v["supplier_id"] for v in done["shortlist"]]
     assert client.post(f"/searches/{ids[0]}/review", json={"approved": []}).status_code in (409, 200)
+    metrics = client.get("/metrics").json()
+    assert metrics["searches"] == len(ids) and metrics["alerts"] == [] and metrics["confidence_psi"] is not None
 
 
 def test_claude_adapter_parses_json_out_of_the_answer():

@@ -1,0 +1,141 @@
+# Retraining the stance reader: harvest the labels production already paid for, train, gate, publish.
+# Started by the weekly CronWorkflow below, or by on-call when GET /metrics raises novel wording or confidence drift.
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: retrain-reader
+spec:
+  entrypoint: retrain
+  serviceAccountName: scout-trainer
+  arguments:
+    parameters:
+      - name: version          # the candidate's name in the registry, e.g. v3
+      - name: image
+        value: scout-trainer:latest
+      - name: rfqs             # 0 = every search of the week; CI passes a small number
+        value: "0"
+      - name: promote          # "true" promotes a candidate that passed its gate
+        value: "false"
+      - name: bucket           # models bucket the API loads from; empty = do not publish
+        value: ""
+  volumeClaimTemplates:
+    - metadata:
+        name: workspace
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+  templates:
+    - name: retrain
+      steps:
+        - - name: workspace
+            template: run
+            arguments:
+              parameters:
+                - name: cmd
+                  value: cp -a /app/. /workspace/
+        - - name: harvest
+            template: run
+            arguments:
+              parameters:
+                - name: cmd
+                  value: >-
+                    python scripts/harvest.py --rfqs {{workflow.parameters.rfqs}}
+                    --out data/labels/harvested-{{workflow.parameters.version}}.jsonl
+        - - name: train
+            template: run
+            arguments:
+              parameters:
+                - name: cmd
+                  value: >-
+                    python -m scout.nlp.train $(for f in data/labels/*.jsonl; do printf '%s %s ' --corpus "$f"; done)
+                    --out models/{{workflow.parameters.version}}
+        - - name: gate
+            template: run
+            arguments:
+              parameters:
+                - name: cmd
+                  value: >-
+                    python scripts/gate.py --candidate {{workflow.parameters.version}}
+                    --rfqs {{workflow.parameters.rfqs}}
+                    $( [ "{{workflow.parameters.promote}}" = "true" ] && echo --promote )
+        - - name: publish
+            template: run
+            arguments:
+              parameters:
+                - name: cmd
+                  value: >-
+                    python scripts/publish.py --version {{workflow.parameters.version}}
+                    --bucket "{{workflow.parameters.bucket}}"
+
+    - name: run
+      inputs:
+        parameters:
+          - name: cmd
+      container:
+        image: "{{workflow.parameters.image}}"
+        imagePullPolicy: IfNotPresent
+        command: [sh, -c]
+        args: ["{{inputs.parameters.cmd}}"]
+        workingDir: /workspace
+        env:
+          - name: SCOUT_HOME
+            value: /workspace
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+        resources:
+          requests: { cpu: "1", memory: 2Gi }
+          limits: { memory: 4Gi }
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: retrain-reader-weekly
+spec:
+  schedules: ["17 3 * * 1"]   # Mondays 03:17, after a week of traffic
+  timezone: Europe/Berlin
+  concurrencyPolicy: Forbid
+  workflowSpec:
+    workflowTemplateRef:
+      name: retrain-reader
+    arguments:
+      parameters:
+        - name: version
+          value: "w{{workflow.creationTimestamp.Y}}{{workflow.creationTimestamp.m}}{{workflow.creationTimestamp.d}}"
+        - name: image
+          value: europe-west3-docker.pkg.dev/PROJECT/scout/trainer:latest
+        - name: promote
+          value: "true"
+        - name: bucket
+          value: PROJECT-scout-models
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: scout-trainer
+  annotations:
+    iam.gke.io/gcp-service-account: scout-trainer@PROJECT.iam.gserviceaccount.com
+---
+# what the workflow's pods may do: report step results to the Argo controller, nothing else
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: scout-trainer
+rules:
+  - apiGroups: [argoproj.io]
+    resources: [workflowtaskresults]
+    verbs: [create, patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: scout-trainer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: scout-trainer
+subjects:
+  - kind: ServiceAccount
+    name: scout-trainer

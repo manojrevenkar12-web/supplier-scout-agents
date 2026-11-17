@@ -3,30 +3,47 @@ on: [push, pull_request]
 jobs:
   python:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install -e '.[dev]'
+      - name: PyTorch (CPU) for training; the service itself needs only NumPy
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -e '.[dev,train]'
       - run: ruff check src tests scripts
       - run: pytest -q
-      - name: The evaluation reproduces the committed report, and the agent meets its quality target
+      - name: The labelled corpus and the harvested labels reproduce
+        run: |
+          python scripts/export_labels.py
+          python scripts/harvest.py --model v1
+          git diff --exit-code data/labels
+      - name: Training reproduces every released reader's card (validation, threshold, int8 parity)
+        run: python scripts/check_training.py
+      - name: The evaluations reproduce the committed reports; the agent in production meets its target
         run: |
           python scripts/evaluate.py
-          git diff --exit-code reports/dev.json
-          python -c "import json; r=json.load(open('reports/dev.json')); assert r['agent']['failure_rate'] < r['target_failure_rate'], r['agent']['failure_rate']"
-      - name: README and dashboard data match the report
+          python scripts/evaluate.py --world drift --designs agent,agent_reader,reader_only
+          git diff --exit-code reports/dev.json reports/drift.json
+          python -c "import json; r=json.load(open('reports/dev.json')); assert r['agent_reader']['failure_rate'] < r['target_failure_rate'], r['agent_reader']['failure_rate']"
+      - name: The monitor reproduces what on-call would have seen
+        run: |
+          python scripts/monitor.py
+          git diff --exit-code reports/monitor.json
+      - name: README and dashboard data match the reports
         run: |
           python scripts/readme.py
           git diff --exit-code README.md web/public/data/console.json
+
   terraform:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: infra/terraform } }
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
-      - run: terraform fmt -check
+      - run: terraform fmt -check -diff
       - run: terraform init -backend=false && terraform validate
+
   web:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: web } }
@@ -37,3 +54,59 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm test
+
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: The API image serves the reader in production on NumPy, with no PyTorch in it
+        run: |
+          docker build -t scout-api:ci .
+          docker run --rm scout-api:ci python -c "import importlib.util as u, sys; sys.exit(u.find_spec('torch') is not None)"
+          docker run --rm scout-api:ci python -c "from scout.nlp import registry; r = registry.load(); print(r.card['version'], r.read(['Certified to ISO 9001.']))"
+          docker images scout-api:ci --format '{{.Size}}'
+
+  argo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with: { cluster_name: scout }
+      - name: Argo Workflows, the trainer image and the retraining template
+        run: |
+          kubectl create namespace argo
+          kubectl apply -n argo --server-side -f https://github.com/argoproj/argo-workflows/releases/download/v3.7.17/install.yaml
+          docker build -f Dockerfile.trainer -t scout-trainer:ci .
+          kind load docker-image scout-trainer:ci --name scout
+          kubectl apply -n argo -f deploy/argo/retrain.yaml
+          kubectl -n argo rollout status deploy/workflow-controller --timeout=300s
+      - name: The GKE manifests are accepted by a Kubernetes API server
+        run: |
+          kubectl create namespace scout
+          kubectl apply --dry-run=server -k deploy/k8s
+      - name: The retraining workflow runs end to end (harvest, train, gate, publish) on a small week
+        run: |
+          cat <<'YAML' | kubectl create -n argo -f -
+          apiVersion: argoproj.io/v1alpha1
+          kind: Workflow
+          metadata: { name: retrain-ci }
+          spec:
+            workflowTemplateRef: { name: retrain-reader }
+            arguments:
+              parameters:
+                - { name: version, value: ci }
+                - { name: image, value: "scout-trainer:ci" }
+                - { name: rfqs, value: "40" }
+          YAML
+          for i in $(seq 1 180); do
+            phase=$(kubectl -n argo get wf retrain-ci -o jsonpath='{.status.phase}')
+            echo "phase: ${phase:-pending}"
+            case "$phase" in Succeeded) break ;; Failed|Error) break ;; esac
+            sleep 10
+          done
+          kubectl -n argo get wf retrain-ci -o jsonpath='{range .status.nodes.*}{.displayName}{"\t"}{.phase}{"\n"}{end}'
+          test "$phase" = Succeeded
+      - name: Logs of the workflow
+        if: always()
+        run: kubectl -n argo logs -l workflows.argoproj.io/workflow=retrain-ci --all-containers --prefix --tail=40 || true

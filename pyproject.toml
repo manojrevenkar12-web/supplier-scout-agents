@@ -14,7 +14,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-gcp = ["google-cloud-pubsub>=2.21"]
+gcp = ["google-cloud-pubsub>=2.21", "google-cloud-storage>=2.16"]
+train = ["torch>=2.4"]
 dev = ["pytest>=8", "ruff>=0.6", "uvicorn>=0.29"]
 
 [build-system]

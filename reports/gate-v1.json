@@ -1,0 +1,159 @@
+{
+  "candidate": "v1",
+  "checks": [
+    {
+      "check": "validation accuracy",
+      "limit": ">= 0.99",
+      "passed": true,
+      "value": 0.9941
+    },
+    {
+      "check": "int8 runtime agrees with PyTorch",
+      "limit": ">= 0.999",
+      "passed": true,
+      "value": 1.0
+    },
+    {
+      "check": "largest probability gap, int8 vs PyTorch",
+      "limit": "<= 0.02",
+      "passed": true,
+      "value": 0.0018
+    },
+    {
+      "check": "dev: searches that fail",
+      "limit": "<= 0.01",
+      "passed": true,
+      "value": 0.0
+    },
+    {
+      "check": "dev: cost per search",
+      "limit": "<= 0.01",
+      "passed": true,
+      "value": 0.0017
+    },
+    {
+      "check": "drift: searches that fail",
+      "limit": "<= 0.41 (production)",
+      "passed": true,
+      "value": 0.0375
+    },
+    {
+      "check": "dev: suppliers sent to a person per search",
+      "limit": "<= 4.91",
+      "passed": true,
+      "value": 2.12
+    }
+  ],
+  "passed": true,
+  "production": null,
+  "worlds": {
+    "dev": {
+      "baseline": {
+        "failure_rate": 0.228,
+        "model_calls_per_search": 108.6,
+        "precision": 0.9603,
+        "reading": {
+          "confidence_hist": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "novel": 0,
+          "sentences": 0,
+          "unsure": 0
+        },
+        "recall_at_k": 0.9201,
+        "review_per_search": 4.41,
+        "sentences_asked": 0,
+        "usd_per_search": 0.2633
+      },
+      "candidate": {
+        "failure_rate": 0.0,
+        "model_calls_per_search": 1.0,
+        "precision": 1.0,
+        "reading": {
+          "confidence_hist": [
+            18185,
+            0,
+            0,
+            0,
+            0,
+            0,
+            114,
+            232,
+            22533,
+            563792
+          ],
+          "novel": 18185,
+          "sentences": 604856,
+          "unsure": 18185
+        },
+        "recall_at_k": 1.0,
+        "review_per_search": 2.12,
+        "sentences_asked": 3,
+        "usd_per_search": 0.0017
+      }
+    },
+    "drift": {
+      "baseline": {
+        "failure_rate": 0.41,
+        "model_calls_per_search": 137.6,
+        "precision": 0.9325,
+        "reading": {
+          "confidence_hist": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "novel": 0,
+          "sentences": 0,
+          "unsure": 0
+        },
+        "recall_at_k": 0.8023,
+        "review_per_search": 10.21,
+        "sentences_asked": 0,
+        "usd_per_search": 0.3369
+      },
+      "candidate": {
+        "failure_rate": 0.0375,
+        "model_calls_per_search": 4.6,
+        "precision": 0.995,
+        "reading": {
+          "confidence_hist": [
+            71620,
+            0,
+            0,
+            192,
+            0,
+            0,
+            84,
+            145,
+            13998,
+            336378
+          ],
+          "novel": 71620,
+          "sentences": 422417,
+          "unsure": 71620
+        },
+        "recall_at_k": 0.984,
+        "review_per_search": 3.99,
+        "sentences_asked": 718,
+        "usd_per_search": 0.0041
+      }
+    }
+  }
+}

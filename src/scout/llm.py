@@ -7,12 +7,13 @@ from typing import Protocol
 
 import httpx
 
-from scout.models import Claim, Requirements, Rfq, SupplierPage
+from scout.models import STANCES, Claim, Requirements, Rfq, SupplierPage
 
 
 class LLM(Protocol):
     def plan(self, rfq: Rfq) -> Requirements: ...
     def qualify(self, page_text: str, page: SupplierPage, req: Requirements) -> Claim: ...
+    def stance(self, sentence: str, question: str) -> str: ...
 
 
 class Usage:
@@ -23,6 +24,8 @@ class Usage:
         self.calls = 0
         self.input_tokens = 0
         self.output_tokens = 0
+        # what the stance reader saw in this search: sentences read, unsure, novel, and a confidence histogram
+        self.reading = {"sentences": 0, "unsure": 0, "novel": 0, "confidence_hist": [0] * 10}
 
     def add(self, prompt_chars: int, output_chars: int) -> None:
         self.calls += 1
@@ -76,3 +79,12 @@ class AnthropicLLM:
                 f"<page>{page_text}</page>"
             )
         )
+
+    def stance(self, sentence: str, question: str) -> str:
+        """One sentence the reader was unsure about: what does it say about the supplier?"""
+        out = self._ask(
+            f"A sentence from a supplier's web page, about {question}. Which one label fits what it says about "
+            f'this supplier: {", ".join(STANCES)}? Answer as {{"label": "..."}}.\n<sentence>{sentence}</sentence>'
+        )
+        label = str(out.get("label", "OTHER"))
+        return label if label in STANCES else "OTHER"

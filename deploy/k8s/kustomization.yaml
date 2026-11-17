@@ -1,0 +1,17 @@
+# The supplier search on GKE: the API and the agent worker. Searches travel over Pub/Sub; the reader in production
+# and the supplier pages are pulled from GCS at start, so a promoted reader rolls out with `kubectl rollout restart`.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: scout
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - api.yaml
+  - worker.yaml
+configMapGenerator:
+  - name: scout-env
+    literals:
+      - GCP_PROJECT=PROJECT
+      - MODELS_BUCKET=PROJECT-scout-models
+      - SUPPLIER_PAGES=/data/pages.jsonl
+      - SCOUT_HOME=/app

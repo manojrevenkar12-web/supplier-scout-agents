@@ -1,7 +1,8 @@
 """Run every RFQ of a world through each design and compare the shortlists with the truth.
 
-    python3 scripts/evaluate.py            dev world (config/world.toml)
-    python3 scripts/evaluate.py --heldout  held-out world, once (writes config/heldout.lock)
+    python3 scripts/evaluate.py                    dev world (config/world.toml)
+    python3 scripts/evaluate.py --world drift      six months later: new wording (config/drift.toml)
+    python3 scripts/evaluate.py --world heldout    held-out world, once (writes config/heldout.lock)
 
 A search fails if its shortlist holds a supplier that cannot really supply, holds one company twice, or is
 shorter than it had to be. This script and src/scout/world/ are the only code that reads the truth.
@@ -25,6 +26,8 @@ from scout import settings as settings_mod  # noqa: E402
 from scout.graph import DESIGNS, build  # noqa: E402
 from scout.index import HybridIndex  # noqa: E402
 from scout.llm import Usage  # noqa: E402
+from scout.nlp import registry  # noqa: E402
+from scout.verify import StanceCache  # noqa: E402
 from scout.world.sim import SimLLM, World  # noqa: E402
 
 
@@ -32,16 +35,18 @@ def q(xs: list[float], p: float) -> float:
     return round(sorted(xs)[min(len(xs) - 1, int(p * len(xs)))], 4) if xs else 0.0
 
 
-def measure(world: World, index: HybridIndex, design: str, settings: dict) -> dict:
+def measure(world: World, index: HybridIndex, design: str, settings: dict, reader=None) -> dict:
     llm = SimLLM(world)
+    cache = StanceCache()
     k = settings["search"]["shortlist_size"]
     reasons: Counter = Counter()
     fails, precisions, recalls, costs, calls, ms, examples = 0, [], [], [], [], [], []
     injected = 0
     reviews = []
+    reading = {"sentences": 0, "unsure": 0, "novel": 0, "confidence_hist": [0] * 10}
     for rfq in world.rfqs:
         truth = set(world.truth[rfq.id]["qualified"])
-        graph, usage = build(index, llm, settings, design, usage=Usage(settings["cost"]))
+        graph, usage = build(index, llm, settings, design, usage=Usage(settings["cost"]), reader=reader, cache=cache)
         t0 = time.perf_counter()
         try:
             out = graph.invoke({"rfq": rfq})
@@ -83,6 +88,11 @@ def measure(world: World, index: HybridIndex, design: str, settings: dict) -> di
         costs.append(usage.usd)
         reviews.append(len(out.get("review", [])) if isinstance(out, dict) else 0)
         calls.append(usage.calls)
+        for key in ("sentences", "unsure", "novel"):
+            reading[key] += usage.reading[key]
+        reading["confidence_hist"] = [
+            a + b for a, b in zip(reading["confidence_hist"], usage.reading["confidence_hist"], strict=True)
+        ]
     n = len(world.rfqs)
     return {
         "design": design,
@@ -96,41 +106,61 @@ def measure(world: World, index: HybridIndex, design: str, settings: dict) -> di
         "p95_ms": round(q(ms, 0.95)),
         "review_per_search": round(statistics.mean(reviews), 2),
         "injected_suppliers_shortlisted": injected,
+        "sentences_asked": cache.asked,
+        "reading": reading,
         "failure_reasons": dict(reasons.most_common()),
         "examples": examples,
     }
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--heldout", action="store_true")
-    args = ap.parse_args()
-    lock = ROOT / "config" / "heldout.lock"
-    if args.heldout and lock.exists():
-        sys.exit(f"the held-out world already ran ({lock.read_text().strip()}); see AGENTS.md")
-    world = World.load(ROOT / "config" / ("heldout.toml" if args.heldout else "world.toml"))
-    settings = settings_mod.load()
+WORLDS = {"dev": "world.toml", "drift": "drift.toml", "heldout": "heldout.toml"}
+
+
+def run(world_name: str, designs: list[str], model: str, settings: dict, rfqs: int = 0) -> dict:
+    world = World.load(ROOT / "config" / WORLDS[world_name])
+    if rfqs:
+        world.rfqs = world.rfqs[:rfqs]  # a quick run (the Argo smoke test in CI)
     index = HybridIndex(world.pages, settings["search"]["rrf_k"])
+    reader = registry.load(model)
     report = {
-        "world": "heldout" if args.heldout else "dev",
+        "world": world_name,
         "pages": len(world.pages),
         "companies": len(world.companies),
+        "rfqs": len(world.rfqs),
         "target_failure_rate": settings["quality"]["target_failure_rate"],
+        "reader": model if model != "production" else registry.read()["production"],
     }
-    for d in DESIGNS:
-        report[d] = measure(world, index, d, settings)
-    timing = {d: report[d].pop("p95_ms") for d in DESIGNS}  # wall time varies by machine: printed, not committed
-    out = ROOT / "reports" / f"{report['world']}.json"
+    for d in designs:
+        report[d] = measure(world, index, d, settings, reader if DESIGNS[d].get("reader") else None)
+    return report
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--world", choices=list(WORLDS), default="dev")
+    ap.add_argument("--model", default="production", help="registry version of the reader")
+    ap.add_argument("--designs", default=",".join(DESIGNS))
+    ap.add_argument("--out", type=Path, help="where to write the report (default reports/<world>.json)")
+    args = ap.parse_args()
+    lock = ROOT / "config" / "heldout.lock"
+    if args.world == "heldout" and lock.exists():
+        sys.exit(f"the held-out world already ran ({lock.read_text().strip()}); see AGENTS.md")
+    settings = settings_mod.load()
+    designs = args.designs.split(",")
+    report = run(args.world, designs, args.model, settings)
+    timing = {d: report[d].pop("p95_ms") for d in designs}  # wall time varies by machine: printed, not committed
+    out = args.out or ROOT / "reports" / f"{args.world}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
-    if args.heldout:
+    if args.world == "heldout":
         commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip()
-        lock.write_text(f"ran at commit {commit}\n")
-    for d in DESIGNS:
+        lock.write_text(f"ran at commit {commit} with reader {report['reader']}\n")
+    for d in designs:
         r = report[d]
         print(
             f"{d:18} fail {r['failure_rate']:.2%}  prec {r['precision']:.3f}  recall {r['recall_at_k']:.3f}  "
-            f"${r['usd_per_search']:.3f}  calls {r['model_calls_per_search']}  p95 {timing[d]} ms  "
-            f"{r['failure_reasons']}"
+            f"${r['usd_per_search']:.4f}  calls {r['model_calls_per_search']}  review {r['review_per_search']}  "
+            f"asked {r['sentences_asked']}  p95 {timing[d]} ms  {r['failure_reasons']}"
         )
 
 

@@ -22,3 +22,30 @@ target_failure_rate = 0.01  # the search agent's quality target: under 1% of sea
 [model]
 provider = "simulated"      # "anthropic" calls the Messages API
 anthropic_model = "claude-sonnet-4-5"
+
+[reader]                    # the PyTorch stance reader (scout/nlp): training settings and how it is used
+seed = 7
+dim = 32
+hidden = 64
+epochs = 14
+batch_size = 128
+learning_rate = 0.004
+validation_share = 0.15
+accept_accuracy = 0.995     # readings below the confidence that keeps this accuracy on validation are not trusted
+novelty_quantile = 0.99     # a sentence with more unseen features than 99% of validation sentences, plus the margin,
+novelty_margin = 0.05       #   is read as unsure whatever its confidence
+model = "production"        # the registry entry the agent loads (models/registry.json)
+
+[fallback]                  # when the reader is unsure about a sentence that decides a requirement
+stance_prompt_chars = 700   # instructions and the question around one sentence
+stance_output_chars = 40
+
+[monitor]                   # rolling checks over the last searches (scout/ops/telemetry.py); an alert pages on-call
+window = 500                # searches
+novel_share_margin = 0.03   # novel wording above the share the reader was released with (company names are novel too)
+max_confidence_psi = 0.1    # population stability of the reader's confidence against its release baseline
+max_fallback_calls_per_search = 1.0
+max_usd_per_search = 0.01
+
+[service]
+design = "agent_reader"     # what the API runs

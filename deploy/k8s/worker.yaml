@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scout-worker
+  labels: { app: scout-worker }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: scout-worker }
+  template:
+    metadata:
+      labels: { app: scout-worker }
+    spec:
+      serviceAccountName: scout
+      initContainers:
+        - name: pull-reader-and-pages   # the reader in production and the supplier pages, from GCS
+          image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+          command: [sh, -c]
+          args:
+            - gcloud storage cp -r "gs://$(MODELS_BUCKET)/models/*" /app-models/ &&
+              gcloud storage cp "gs://$(MODELS_BUCKET)/pages.jsonl" /data/pages.jsonl
+          envFrom: [{ configMapRef: { name: scout-env } }]
+          volumeMounts:
+            - { name: models, mountPath: /app-models }
+            - { name: data, mountPath: /data }
+      containers:
+        - name: worker
+          image: europe-west3-docker.pkg.dev/PROJECT/scout/api:latest
+          command: ["python", "-m", "scout.service.worker"]
+          securityContext: { runAsNonRoot: true, runAsUser: 65534, allowPrivilegeEscalation: false }
+          envFrom: [{ configMapRef: { name: scout-env } }]
+          env:
+            - name: ANTHROPIC_API_KEY
+              valueFrom: { secretKeyRef: { name: anthropic, key: api-key } }
+          resources:
+            requests: { cpu: 500m, memory: 512Mi }
+            limits: { memory: 1Gi }
+          volumeMounts:
+            - { name: models, mountPath: /app/models }
+            - { name: data, mountPath: /data }
+      volumes:
+        - { name: models, emptyDir: {} }
+        - { name: data, emptyDir: {} }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: scout-worker
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: scout-worker }
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:   # scale on the Pub/Sub backlog of searches waiting (Cloud Monitoring external metric)
+    - type: External
+      external:
+        metric:
+          name: pubsub.googleapis.com|subscription|num_undelivered_messages
+          selector: { matchLabels: { resource.labels.subscription_id: supplier-searches } }
+        target: { type: AverageValue, averageValue: "5" }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: scout-worker
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: { app: scout-worker }

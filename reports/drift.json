@@ -1,0 +1,127 @@
+{
+  "agent": {
+    "design": "agent",
+    "examples": [
+      {
+        "duplicate": false,
+        "rfq": "We need die casting of aluminium parts, suppliers must hold ISO 13485 and ISO 9001, about 5,000 parts a year, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need forging of abs parts, suppliers must hold ISO 9001 and ISO 14001, located in the EU, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need pcb assembly of aluminium parts, suppliers must hold ISO 14001 and IATF 16949, located in the EU, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      }
+    ],
+    "failed": 164,
+    "failure_rate": 0.41,
+    "failure_reasons": {
+      "shortlist shorter than it had to be": 164,
+      "unqualified supplier: certificate missing or expired": 18,
+      "unqualified supplier: process no longer offered": 15
+    },
+    "injected_suppliers_shortlisted": 0,
+    "model_calls_per_search": 137.6,
+    "precision": 0.9325,
+    "reading": {
+      "confidence_hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "novel": 0,
+      "sentences": 0,
+      "unsure": 0
+    },
+    "recall_at_k": 0.8023,
+    "review_per_search": 10.21,
+    "searches": 400,
+    "sentences_asked": 0,
+    "usd_per_search": 0.3369
+  },
+  "agent_reader": {
+    "design": "agent_reader",
+    "examples": [],
+    "failed": 0,
+    "failure_rate": 0.0,
+    "failure_reasons": {},
+    "injected_suppliers_shortlisted": 0,
+    "model_calls_per_search": 1.0,
+    "precision": 1.0,
+    "reading": {
+      "confidence_hist": [
+        1093,
+        0,
+        0,
+        0,
+        0,
+        75,
+        192,
+        0,
+        0,
+        421057
+      ],
+      "novel": 1093,
+      "sentences": 422417,
+      "unsure": 1168
+    },
+    "recall_at_k": 1.0,
+    "review_per_search": 2.63,
+    "searches": 400,
+    "sentences_asked": 3,
+    "usd_per_search": 0.0017
+  },
+  "companies": 1500,
+  "pages": 1622,
+  "reader": "v2",
+  "reader_only": {
+    "design": "reader_only",
+    "examples": [],
+    "failed": 0,
+    "failure_rate": 0.0,
+    "failure_reasons": {},
+    "injected_suppliers_shortlisted": 0,
+    "model_calls_per_search": 1,
+    "precision": 1.0,
+    "reading": {
+      "confidence_hist": [
+        1093,
+        0,
+        0,
+        0,
+        0,
+        75,
+        192,
+        0,
+        0,
+        421057
+      ],
+      "novel": 1093,
+      "sentences": 422417,
+      "unsure": 1168
+    },
+    "recall_at_k": 1.0,
+    "review_per_search": 2.64,
+    "searches": 400,
+    "sentences_asked": 0,
+    "usd_per_search": 0.0017
+  },
+  "rfqs": 400,
+  "target_failure_rate": 0.01,
+  "world": "drift"
+}

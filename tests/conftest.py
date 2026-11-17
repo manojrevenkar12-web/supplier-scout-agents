@@ -26,3 +26,10 @@ def settings():
 @pytest.fixture(scope="session")
 def index(world, settings):
     return HybridIndex(world.pages, settings["search"]["rrf_k"])
+
+
+@pytest.fixture(scope="session")
+def reader():
+    from scout.nlp import registry
+
+    return registry.load()

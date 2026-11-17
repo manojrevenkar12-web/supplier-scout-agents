@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scout-api
+  labels: { app: scout-api }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: scout-api }
+  template:
+    metadata:
+      labels: { app: scout-api }
+    spec:
+      serviceAccountName: scout
+      initContainers:
+        - name: pull-reader-and-pages   # the reader in production and the supplier pages, from GCS
+          image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+          command: [sh, -c]
+          args:
+            - gcloud storage cp -r "gs://$(MODELS_BUCKET)/models/*" /app-models/ &&
+              gcloud storage cp "gs://$(MODELS_BUCKET)/pages.jsonl" /data/pages.jsonl
+          envFrom: [{ configMapRef: { name: scout-env } }]
+          volumeMounts:
+            - { name: models, mountPath: /app-models }
+            - { name: data, mountPath: /data }
+      containers:
+        - name: api
+          image: europe-west3-docker.pkg.dev/PROJECT/scout/api:latest
+          command: ["uvicorn", "--factory", "scout.service.main:create", "--host", "0.0.0.0", "--port", "8080"]
+          securityContext: { runAsNonRoot: true, runAsUser: 65534, allowPrivilegeEscalation: false }
+          envFrom: [{ configMapRef: { name: scout-env } }]
+          env:
+            - name: ANTHROPIC_API_KEY
+              valueFrom: { secretKeyRef: { name: anthropic, key: api-key } }
+          resources:
+            requests: { cpu: 500m, memory: 512Mi }
+            limits: { memory: 1Gi }
+          volumeMounts:
+            - { name: models, mountPath: /app/models }
+            - { name: data, mountPath: /data }
+          ports: [{ containerPort: 8080 }]
+          readinessProbe:
+            httpGet: { path: /metrics, port: 8080 }
+            periodSeconds: 10
+      volumes:
+        - { name: models, emptyDir: {} }
+        - { name: data, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scout-api
+spec:
+  selector: { app: scout-api }
+  ports: [{ port: 80, targetPort: 8080 }]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: scout-api
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: scout-api }
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }

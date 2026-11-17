@@ -13,7 +13,9 @@ from scout.graph import build
 from scout.index import HybridIndex
 from scout.llm import LLM, Usage
 from scout.models import Rfq
+from scout.ops.telemetry import Monitor, record
 from scout.service.bus import Bus
+from scout.verify import StanceCache
 
 TOPIC = SUBSCRIPTION = "supplier-searches"
 
@@ -29,10 +31,26 @@ class ReviewIn(BaseModel):
 class Searches:
     """Runs searches and keeps their state; in production the state is in Firestore (see infra/)."""
 
-    def __init__(self, index: HybridIndex, llm: LLM, settings: dict, bus: Bus):
+    def __init__(self, index: HybridIndex, llm: LLM, settings: dict, bus: Bus, reader=None, design: str | None = None):
         self.index, self.llm, self.settings, self.bus = index, llm, settings, bus
+        self.reader = reader
+        self.design = design or settings["service"]["design"]
+        self.model = (reader.card.get("version") if reader is not None else None) or ("reader" if reader else None)
+        self.cache = StanceCache()  # in production: a Firestore collection shared by the workers
+        self.monitor = Monitor(settings, reader.card.get("baseline") if reader is not None else None)
         self.results: dict[str, dict] = {}
-        self.graph, _ = build(index, llm, settings, "agent", review=True)
+
+    def _build(self, usage: Usage):
+        return build(
+            self.index,
+            self.llm,
+            self.settings,
+            self.design,
+            review=True,
+            usage=usage,
+            reader=self.reader,
+            cache=self.cache,
+        )[0]
 
     def submit(self, text: str) -> str:
         sid = f"search-{uuid.uuid4().hex[:12]}"
@@ -47,10 +65,11 @@ class Searches:
                 self.bus.ack(SUBSCRIPTION, [ack_id])  # a redelivered message for a search already run
                 continue
             usage = Usage(self.settings["cost"])
-            graph, _ = build(self.index, self.llm, self.settings, "agent", review=True, usage=usage)
-            self.graph = graph
+            graph = self._build(usage)
             cfg = {"configurable": {"thread_id": msg["id"]}}
             out = graph.invoke({"rfq": Rfq(id=msg["id"], text=msg["text"])}, cfg)
+            size = self.settings["search"]["shortlist_size"]
+            self.monitor.add(record(msg["id"], out, usage, self.design, self.model, size))
             self.results[msg["id"]] = self._view(out, usage, graph, cfg)
             self.bus.ack(SUBSCRIPTION, [ack_id])
             done += 1
@@ -92,6 +111,11 @@ def create_app(searches: Searches) -> FastAPI:
         if r is None:
             raise HTTPException(404, "no such search")
         return {k: v for k, v in r.items() if not k.startswith("_")}
+
+    @app.get("/metrics")
+    def metrics():
+        """The rolling checks over the last searches: novel wording, confidence drift, fallbacks, cost."""
+        return searches.monitor.summary()
 
     @app.post("/searches/{sid}/review")
     def review(sid: str, body: ReviewIn):

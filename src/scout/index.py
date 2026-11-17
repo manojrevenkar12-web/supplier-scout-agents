@@ -26,6 +26,17 @@ class HybridIndex:
         self.bm25 = BM25Okapi([tokens(p.text) for p in pages])
         self.tfidf = TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 5), min_df=2, sublinear_tf=True)
         self.matrix = self.tfidf.fit_transform([p.text.lower() for p in pages])
+        # facets: which pages name each process and each material (whole terms), for exhaustive retrieval
+        from scout.verify import materials_on
+
+        lower = [p.text.lower() for p in pages]
+        self.by_process = {
+            k: {i for i, t in enumerate(lower) if any(w in t for w in ws)} for k, ws in PROCESSES.items()
+        }
+        self.by_material: dict[str, set[int]] = {k: set() for k in MATERIALS}
+        for i, t in enumerate(lower):
+            for m in materials_on(t):
+                self.by_material[m].add(i)
 
     @staticmethod
     def query_for(req: Requirements, widen: bool = False) -> str:
@@ -50,3 +61,10 @@ class HybridIndex:
     def search_bm25(self, query: str, k: int) -> list[SupplierPage]:
         scores = self.bm25.get_scores(tokens(query))
         return [self.pages[i] for i in np.argsort(-scores, kind="stable")[:k]]
+
+    def facets(self, req: Requirements) -> list[SupplierPage]:
+        """Every page that names the process and the material, in the region: no ranking, nothing cut off.
+        Affordable when reading a page costs no model call (the stance reader)."""
+        hits = self.by_process[req.process] & self.by_material[req.material]
+        allowed = set(req.region) if req.region else None
+        return [self.pages[i] for i in sorted(hits) if allowed is None or self.pages[i].country in allowed]

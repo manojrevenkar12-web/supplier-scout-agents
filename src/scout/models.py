@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+# What one sentence on a supplier page can say. The reader predicts these; the world labels its sentences with them.
+STANCES = ["MAKES", "TRADES", "PROC_ON", "PROC_OFF", "CERT_ON", "CERT_OFF", "CERT_OTHERS", "INSTRUCTION", "OTHER"]
+
 
 class Rfq(BaseModel):
     id: str

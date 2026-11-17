@@ -1,0 +1,6 @@
+# The world the reader's labelled corpus comes from: other companies, the common and varied phrasing, no novel
+# wording. scripts/export_labels.py writes its sentences with their stance, standing in for an annotation team.
+base = "world.toml"
+seed = 101
+suppliers = 9000
+rfqs = 0

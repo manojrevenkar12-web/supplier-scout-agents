@@ -1,7 +1,9 @@
+import os
 import tomllib
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+# The checkout, or where an image keeps config/ and models/ (SCOUT_HOME=/app in the images)
+ROOT = Path(os.environ.get("SCOUT_HOME", Path(__file__).resolve().parents[2]))
 
 
 def load(path: Path | None = None) -> dict:

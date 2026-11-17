@@ -4,23 +4,87 @@
     "examples": [
       {
         "duplicate": false,
-        "rfq": "We need forging of abs parts, suppliers must hold ISO 14001 and ISO 13485, manufacturers only, no traders.",
+        "rfq": "We need injection molding of pa66 parts, suppliers must hold ISO 14001 and ISO 9001, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
         "short": true,
         "wrong": 0
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need cnc turning of abs parts, suppliers must hold ISO 14001 and ISO 13485, located in the EU, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 0
+      },
+      {
+        "duplicate": false,
+        "rfq": "We need cnc turning of aluminium parts, suppliers must hold IATF 16949, manufacturers only, no traders.",
+        "short": true,
+        "wrong": 1
       }
     ],
-    "failed": 1,
-    "failure_rate": 0.002,
+    "failed": 114,
+    "failure_rate": 0.228,
     "failure_reasons": {
-      "shortlist shorter than it had to be": 1
+      "shortlist shorter than it had to be": 111,
+      "unqualified supplier: certificate missing or expired": 39,
+      "unqualified supplier: process no longer offered": 14
     },
-    "injected_suppliers_shortlisted": 0,
-    "model_calls_per_search": 63.3,
-    "precision": 1.0,
-    "recall_at_k": 0.9996,
-    "review_per_search": 0.85,
+    "injected_suppliers_shortlisted": 10,
+    "model_calls_per_search": 108.6,
+    "precision": 0.9603,
+    "reading": {
+      "confidence_hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "novel": 0,
+      "sentences": 0,
+      "unsure": 0
+    },
+    "recall_at_k": 0.9201,
+    "review_per_search": 4.41,
     "searches": 500,
-    "usd_per_search": 0.1498
+    "sentences_asked": 0,
+    "usd_per_search": 0.2633
+  },
+  "agent_reader": {
+    "design": "agent_reader",
+    "examples": [],
+    "failed": 0,
+    "failure_rate": 0.0,
+    "failure_reasons": {},
+    "injected_suppliers_shortlisted": 0,
+    "model_calls_per_search": 1.0,
+    "precision": 1.0,
+    "reading": {
+      "confidence_hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        112,
+        0,
+        0,
+        0,
+        604744
+      ],
+      "novel": 0,
+      "sentences": 604856,
+      "unsure": 112
+    },
+    "recall_at_k": 1.0,
+    "review_per_search": 2.12,
+    "searches": 500,
+    "sentences_asked": 1,
+    "usd_per_search": 0.0017
   },
   "agent_unverified": {
     "design": "agent_unverified",
@@ -28,8 +92,8 @@
       {
         "duplicate": false,
         "rfq": "We need injection molding of pa66 parts, suppliers must hold ISO 14001 and ISO 9001, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
-        "short": false,
-        "wrong": 2
+        "short": true,
+        "wrong": 3
       },
       {
         "duplicate": false,
@@ -39,31 +103,83 @@
       },
       {
         "duplicate": false,
-        "rfq": "We need cnc milling of stainless steel parts, suppliers must hold ISO 9001, located in the EU, about 20,000 parts a year, manufacturers only, no traders.",
+        "rfq": "We need pcb assembly of stainless steel parts, suppliers must hold ISO 14001, located in the EU, manufacturers only, no traders.",
         "short": true,
-        "wrong": 3
+        "wrong": 1
       }
     ],
-    "failed": 374,
-    "failure_rate": 0.748,
+    "failed": 360,
+    "failure_rate": 0.72,
     "failure_reasons": {
-      "shortlist shorter than it had to be": 332,
-      "unqualified supplier: capacity": 189,
-      "unqualified supplier: certificate missing or expired": 274,
+      "shortlist shorter than it had to be": 326,
+      "unqualified supplier: capacity": 163,
+      "unqualified supplier: certificate missing or expired": 369,
       "unqualified supplier: other": 1,
-      "unqualified supplier: process no longer offered": 122,
-      "unqualified supplier: trader or distributor": 115
+      "unqualified supplier: process no longer offered": 51,
+      "unqualified supplier: trader or distributor": 97
     },
-    "injected_suppliers_shortlisted": 26,
-    "model_calls_per_search": 46.2,
-    "precision": 0.714,
-    "recall_at_k": 0.7643,
+    "injected_suppliers_shortlisted": 48,
+    "model_calls_per_search": 63.3,
+    "precision": 0.7153,
+    "reading": {
+      "confidence_hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "novel": 0,
+      "sentences": 0,
+      "unsure": 0
+    },
+    "recall_at_k": 0.7632,
     "review_per_search": 0,
     "searches": 500,
-    "usd_per_search": 0.1091
+    "sentences_asked": 0,
+    "usd_per_search": 0.1528
   },
   "companies": 1800,
-  "pages": 1948,
+  "pages": 1937,
+  "reader": "v2",
+  "reader_only": {
+    "design": "reader_only",
+    "examples": [],
+    "failed": 0,
+    "failure_rate": 0.0,
+    "failure_reasons": {},
+    "injected_suppliers_shortlisted": 0,
+    "model_calls_per_search": 1,
+    "precision": 1.0,
+    "reading": {
+      "confidence_hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        112,
+        0,
+        0,
+        0,
+        604744
+      ],
+      "novel": 0,
+      "sentences": 604856,
+      "unsure": 112
+    },
+    "recall_at_k": 1.0,
+    "review_per_search": 2.17,
+    "searches": 500,
+    "sentences_asked": 0,
+    "usd_per_search": 0.0017
+  },
+  "rfqs": 500,
   "single_shot": {
     "design": "single_shot",
     "examples": [
@@ -77,32 +193,50 @@
         "duplicate": false,
         "rfq": "We need cable harness of aluminium parts, suppliers must hold ISO 9001, manufacturers only, no traders.",
         "short": true,
-        "wrong": 4
+        "wrong": 5
       },
       {
         "duplicate": true,
         "rfq": "We need pcb assembly of stainless steel parts, suppliers must hold ISO 14001, located in the EU, manufacturers only, no traders.",
         "short": true,
-        "wrong": 2
+        "wrong": 1
       }
     ],
-    "failed": 490,
-    "failure_rate": 0.98,
+    "failed": 421,
+    "failure_rate": 0.842,
     "failure_reasons": {
-      "same company twice": 32,
-      "shortlist shorter than it had to be": 490,
-      "unqualified supplier: capacity": 44,
-      "unqualified supplier: certificate missing or expired": 230,
-      "unqualified supplier: process no longer offered": 231,
-      "unqualified supplier: trader or distributor": 45
+      "same company twice": 26,
+      "shortlist shorter than it had to be": 419,
+      "unqualified supplier: capacity": 128,
+      "unqualified supplier: certificate missing or expired": 216,
+      "unqualified supplier: process no longer offered": 55,
+      "unqualified supplier: trader or distributor": 107
     },
-    "injected_suppliers_shortlisted": 30,
+    "injected_suppliers_shortlisted": 29,
     "model_calls_per_search": 31,
-    "precision": 0.1516,
-    "recall_at_k": 0.122,
+    "precision": 0.6333,
+    "reading": {
+      "confidence_hist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "novel": 0,
+      "sentences": 0,
+      "unsure": 0
+    },
+    "recall_at_k": 0.4973,
     "review_per_search": 0,
     "searches": 500,
-    "usd_per_search": 0.0732
+    "sentences_asked": 0,
+    "usd_per_search": 0.0746
   },
   "target_failure_rate": 0.01,
   "world": "dev"

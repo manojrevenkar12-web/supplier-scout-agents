@@ -1,0 +1,9 @@
+# A week of production traffic after the wording drifted: the searches whose agreed fallback answers are harvested
+# as labels for retraining (scripts/harvest.py). Other companies and RFQs than the drift and held-out worlds.
+base = "world.toml"
+seed = 17
+suppliers = 1500
+rfqs = 300
+
+[phrasing]
+novel = 0.25

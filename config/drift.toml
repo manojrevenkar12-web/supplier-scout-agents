@@ -1,0 +1,9 @@
+# Six months later: new companies, and a quarter of the facts said in wording nobody has trained on yet.
+# Used to show drift monitoring and the retraining loop. Not the held-out world.
+base = "world.toml"
+seed = 11
+suppliers = 1500
+rfqs = 400
+
+[phrasing]
+novel = 0.25

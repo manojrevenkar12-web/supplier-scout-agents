@@ -20,7 +20,7 @@ from scout.index import HybridIndex
 from scout.llm import LLM, Usage
 from scout.models import Requirements, Rfq, SupplierPage, Verdict
 from scout.taxonomy import CERTS, MATERIALS, PROCESSES
-from scout.verify import strip_instructions, trust, verify
+from scout.verify import StanceCache, read_page, strip_instructions, trust, verify
 
 DESIGNS = {
     "single_shot": dict(
@@ -30,6 +30,30 @@ DESIGNS = {
         verify=False, hybrid=True, reflect=True, dedupe=True, strip=False, prefilter=True, rank="model"
     ),
     "agent": dict(verify=True, hybrid=True, reflect=True, dedupe=True, strip=True, prefilter=True, rank="fit"),
+    # the trained reader decides from sentence stances; the LLM is asked only about sentences it is unsure of
+    "agent_reader": dict(
+        verify=True,
+        hybrid=True,
+        reflect=True,
+        dedupe=True,
+        strip=True,
+        prefilter=True,
+        rank="fit",
+        reader="ask",
+        facets=True,
+    ),
+    # ablation: no fallback, an unsure sentence sends the supplier to a person
+    "reader_only": dict(
+        verify=True,
+        hybrid=True,
+        reflect=True,
+        dedupe=True,
+        strip=True,
+        prefilter=True,
+        rank="fit",
+        reader="person",
+        facets=True,
+    ),
 }
 
 
@@ -63,9 +87,14 @@ def build(
     design: str = "agent",
     review: bool = False,
     usage: Usage | None = None,
+    reader=None,
+    cache: StanceCache | None = None,
 ):
     flags = DESIGNS[design]
     s = settings["search"]
+    fb = settings["fallback"]
+    if flags.get("reader") and reader is None:
+        raise ValueError(f"design {design} needs the stance reader")
     usage = usage or Usage(settings["cost"])
 
     def log(state: State, node: str, **kw: Any) -> list[dict]:
@@ -96,7 +125,10 @@ def build(
         widen = n > 0
         query = index.query_for(req, widen=widen)
         k = s["first_pass_candidates"] * s["widen_factor"] ** n
-        hits = index.search(query, k, req.region) if flags["hybrid"] else index.search_bm25(query, k)
+        if flags.get("facets"):
+            hits = index.facets(req)
+        else:
+            hits = index.search(query, k, req.region) if flags["hybrid"] else index.search_bm25(query, k)
         new = [p for p in hits if p.supplier_id not in state["seen"]]
         if flags["prefilter"]:  # code drops pages that cannot qualify before paying for a model call
             text_has = lambda p: any(w in p.text.lower() for w in PROCESSES[req.process])  # noqa: E731
@@ -117,6 +149,12 @@ def build(
             if usage.usd >= settings["cost"]["max_usd_per_search"]:
                 stopped = "budget"
                 break
+            if flags.get("reader"):
+                ask = llm.stance if flags["reader"] == "ask" else None
+                verdicts[sid], calls = read_page(page, req, reader, ask, cache, settings, usage.reading)
+                for _ in range(calls):
+                    usage.add(fb["stance_prompt_chars"], fb["stance_output_chars"])
+                continue
             text = strip_instructions(page.text) if flags["strip"] else page.text
             claim = llm.qualify(text, page, req)
             usage.add(len(text) + 900, 400)

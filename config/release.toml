@@ -1,0 +1,12 @@
+# The release gate for a stance reader (scripts/gate.py). A reader is promoted only if every check passes.
+
+[card]                       # from the model card written at training
+min_validation_accuracy = 0.99
+min_parity_same_label = 0.999  # the int8 NumPy runtime must read like the PyTorch model it came from
+max_parity_probability_gap = 0.02
+
+[agent]                      # the agent_reader design with this reader, on the dev and drift worlds
+max_dev_failure_rate = 0.01  # the search agent's quality target
+max_usd_per_search = 0.01
+max_review_increase = 0.5    # suppliers per search sent to a person, against the reader in production
+# on the drift world the candidate must fail no more often than the reader in production

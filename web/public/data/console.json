@@ -2,25 +2,92 @@
  "designs": [
   "Single-shot RAG",
   "Agent, claims trusted",
-  "Agent, claims checked"
+  "Agent, keyword checks",
+  "Agent, stance reader + model fallback",
+  "Stance reader, no fallback"
  ],
- "generated_from": "reports/dev.json",
+ "drift": {
+  "designs": [
+   "Agent, keyword checks",
+   "Stance reader v1 + fallback",
+   "Stance reader v2 + fallback",
+   "Stance reader v2, no fallback"
+  ],
+  "ours": 2,
+  "rows": [
+   {
+    "label": "Searches that failed",
+    "note": "",
+    "values": [
+     "41.0%",
+     "3.8%",
+     "0.0%",
+     "0.0%"
+    ]
+   },
+   {
+    "label": "Shortlisted suppliers that really qualify",
+    "note": "",
+    "values": [
+     "93.2%",
+     "99.5%",
+     "100.0%",
+     "100.0%"
+    ]
+   },
+   {
+    "label": "Model calls per search",
+    "note": "",
+    "values": [
+     "137.6",
+     "4.6",
+     "1.0",
+     "1"
+    ]
+   },
+   {
+    "label": "Cost per search",
+    "note": "",
+    "values": [
+     "$0.3369",
+     "$0.0041",
+     "$0.0017",
+     "$0.0017"
+    ]
+   },
+   {
+    "label": "Suppliers sent to a person per search",
+    "note": "",
+    "values": [
+     "10.21",
+     "3.99",
+     "2.63",
+     "2.64"
+    ]
+   }
+  ]
+ },
+ "generated_from": "reports/ and models/registry.json",
  "ledger": [
   {
    "label": "Searches that failed",
    "note": "of 500 RFQs; target under 1.0%",
    "values": [
-    "98.0%",
-    "74.8%",
-    "0.2%"
+    "84.2%",
+    "72.0%",
+    "22.8%",
+    "0.0%",
+    "0.0%"
    ]
   },
   {
    "label": "Shortlisted suppliers that really qualify",
    "note": "precision of the shortlist",
    "values": [
-    "15.2%",
-    "71.4%",
+    "63.3%",
+    "71.5%",
+    "96.0%",
+    "100.0%",
     "100.0%"
    ]
   },
@@ -28,17 +95,21 @@
    "label": "Qualified suppliers found",
    "note": "of the shortlist size, or of all that exist when fewer",
    "values": [
-    "12.2%",
-    "76.4%",
+    "49.7%",
+    "76.3%",
+    "92.0%",
+    "100.0%",
     "100.0%"
    ]
   },
   {
    "label": "Shortlisted suppliers that cannot supply",
-   "note": "expired certificates, traders, discontinued processes, capacity",
+   "note": "lapsed certificates, traders, processes sold, capacity",
    "values": [
-    "550",
-    "701",
+    "506",
+    "681",
+    "53",
+    "0",
     "0"
    ]
   },
@@ -46,7 +117,9 @@
    "label": "The same company twice in a shortlist",
    "note": "one company under two domains or spellings",
    "values": [
-    "32",
+    "26",
+    "0",
+    "0",
     "0",
     "0"
    ]
@@ -55,50 +128,246 @@
    "label": "Suppliers shortlisted because their page told the AI to",
    "note": "pages addressing AI assistants",
    "values": [
-    "30",
-    "26",
+    "29",
+    "48",
+    "10",
+    "0",
     "0"
    ]
   },
   {
    "label": "Model calls per search",
-   "note": "one for the plan, one per page qualified",
+   "note": "the plan, then one per page, or only for sentences the reader is unsure of",
    "values": [
     "31",
-    "46.2",
-    "63.3"
+    "63.3",
+    "108.6",
+    "1.0",
+    "1"
    ]
   },
   {
    "label": "Cost per search",
    "note": "Sonnet-class list prices, from token counts",
    "values": [
-    "$0.073",
-    "$0.109",
-    "$0.150"
+    "$0.0746",
+    "$0.1528",
+    "$0.2633",
+    "$0.0017",
+    "$0.0017"
+   ]
+  },
+  {
+   "label": "Suppliers sent to a person per search",
+   "note": "a deciding sentence unclear, or capacity not stated",
+   "values": [
+    "0",
+    "0",
+    "4.41",
+    "2.12",
+    "2.17"
    ]
   }
  ],
- "reasons": {
-  "Agent, claims checked": {
-   "shortlist shorter than it had to be": 1
+ "monitor": [
+  {
+   "alerts": [],
+   "confidence_psi": 0.0,
+   "fallback_calls_per_search": 0.012,
+   "novel_share": 0.0301,
+   "reader": "v1",
+   "retrain": false,
+   "review_per_search": 2.124,
+   "searches": 500,
+   "short_share": 0.114,
+   "unsure_share": 0.0301,
+   "usd_per_search": 0.00167,
+   "window": "normal week",
+   "world": "world"
   },
-  "Agent, claims trusted": {
-   "shortlist shorter than it had to be": 332,
-   "unqualified supplier: capacity": 189,
-   "unqualified supplier: certificate missing or expired": 274,
-   "unqualified supplier: other": 1,
-   "unqualified supplier: process no longer offered": 122,
-   "unqualified supplier: trader or distributor": 115
+  {
+   "alerts": [
+    "novel wording in 17.0% of sentences (limit 6.0%)",
+    "reader confidence drifted: PSI 0.2637 (limit 0.1)",
+    "3.59 fallback calls per search"
+   ],
+   "confidence_psi": 0.2637,
+   "fallback_calls_per_search": 3.59,
+   "novel_share": 0.1695,
+   "reader": "v1",
+   "retrain": true,
+   "review_per_search": 3.987,
+   "searches": 400,
+   "short_share": 0.15,
+   "unsure_share": 0.1695,
+   "usd_per_search": 0.00409,
+   "window": "wording drifted",
+   "world": "drift"
   },
-  "Single-shot RAG": {
-   "same company twice": 32,
-   "shortlist shorter than it had to be": 490,
-   "unqualified supplier: capacity": 44,
-   "unqualified supplier: certificate missing or expired": 230,
-   "unqualified supplier: process no longer offered": 231,
-   "unqualified supplier: trader or distributor": 45
+  {
+   "alerts": [],
+   "confidence_psi": 0.0086,
+   "fallback_calls_per_search": 0.015,
+   "novel_share": 0.0026,
+   "reader": "v2",
+   "retrain": false,
+   "review_per_search": 2.635,
+   "searches": 400,
+   "short_share": 0.145,
+   "unsure_share": 0.0028,
+   "usd_per_search": 0.00168,
+   "window": "after retraining",
+   "world": "drift"
   }
+ ],
+ "ours": 3,
+ "reasons": {
+  "Agent, claims trusted": {
+   "shortlist shorter than it had to be": 326,
+   "unqualified supplier: capacity": 163,
+   "unqualified supplier: certificate missing or expired": 369,
+   "unqualified supplier: other": 1,
+   "unqualified supplier: process no longer offered": 51,
+   "unqualified supplier: trader or distributor": 97
+  },
+  "Agent, keyword checks": {
+   "shortlist shorter than it had to be": 111,
+   "unqualified supplier: certificate missing or expired": 39,
+   "unqualified supplier: process no longer offered": 14
+  },
+  "Agent, stance reader + model fallback": {},
+  "Single-shot RAG": {
+   "same company twice": 26,
+   "shortlist shorter than it had to be": 419,
+   "unqualified supplier: capacity": 128,
+   "unqualified supplier: certificate missing or expired": 216,
+   "unqualified supplier: process no longer offered": 55,
+   "unqualified supplier: trader or distributor": 107
+  },
+  "Stance reader, no fallback": {}
  },
+ "releases": [
+  {
+   "accuracy": 0.9941,
+   "checks": [
+    {
+     "check": "validation accuracy",
+     "limit": ">= 0.99",
+     "passed": true,
+     "value": 0.9941
+    },
+    {
+     "check": "int8 runtime agrees with PyTorch",
+     "limit": ">= 0.999",
+     "passed": true,
+     "value": 1.0
+    },
+    {
+     "check": "largest probability gap, int8 vs PyTorch",
+     "limit": "<= 0.02",
+     "passed": true,
+     "value": 0.0018
+    },
+    {
+     "check": "dev: searches that fail",
+     "limit": "<= 0.01",
+     "passed": true,
+     "value": 0.0
+    },
+    {
+     "check": "dev: cost per search",
+     "limit": "<= 0.01",
+     "passed": true,
+     "value": 0.0017
+    },
+    {
+     "check": "drift: searches that fail",
+     "limit": "<= 0.41 (production)",
+     "passed": true,
+     "value": 0.0375
+    },
+    {
+     "check": "dev: suppliers sent to a person per search",
+     "limit": "<= 4.91",
+     "passed": true,
+     "value": 2.12
+    }
+   ],
+   "corpora": [
+    "base.jsonl"
+   ],
+   "ece": 0.005,
+   "float32_kb": 4107,
+   "int8_kb": 1167,
+   "macro_f1": 0.945,
+   "min_confidence": 0.2628,
+   "parity": 1.0,
+   "passed": true,
+   "production": false,
+   "sentences": 3573,
+   "version": "v1"
+  },
+  {
+   "accuracy": 0.9984,
+   "checks": [
+    {
+     "check": "validation accuracy",
+     "limit": ">= 0.99",
+     "passed": true,
+     "value": 0.9984
+    },
+    {
+     "check": "int8 runtime agrees with PyTorch",
+     "limit": ">= 0.999",
+     "passed": true,
+     "value": 1.0
+    },
+    {
+     "check": "largest probability gap, int8 vs PyTorch",
+     "limit": "<= 0.02",
+     "passed": true,
+     "value": 0.0002
+    },
+    {
+     "check": "dev: searches that fail",
+     "limit": "<= 0.01",
+     "passed": true,
+     "value": 0.0
+    },
+    {
+     "check": "dev: cost per search",
+     "limit": "<= 0.01",
+     "passed": true,
+     "value": 0.0017
+    },
+    {
+     "check": "drift: searches that fail",
+     "limit": "<= 0.0375 (production)",
+     "passed": true,
+     "value": 0.0
+    },
+    {
+     "check": "dev: suppliers sent to a person per search",
+     "limit": "<= 2.62",
+     "passed": true,
+     "value": 2.12
+    }
+   ],
+   "corpora": [
+    "base.jsonl",
+    "harvested.jsonl"
+   ],
+   "ece": 0.0008,
+   "float32_kb": 4107,
+   "int8_kb": 1167,
+   "macro_f1": 0.9748,
+   "min_confidence": 0.517,
+   "parity": 1.0,
+   "passed": true,
+   "production": true,
+   "sentences": 4315,
+   "version": "v2"
+  }
+ ],
  "target": 0.01
 }

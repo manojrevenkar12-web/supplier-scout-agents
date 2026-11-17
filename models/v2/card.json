@@ -1,0 +1,73 @@
+{
+  "data": {
+    "corpora": [
+      "base.jsonl",
+      "harvested.jsonl"
+    ],
+    "labels": {
+      "CERT_OFF": 83,
+      "CERT_ON": 544,
+      "CERT_OTHERS": 24,
+      "INSTRUCTION": 1,
+      "MAKES": 2330,
+      "OTHER": 420,
+      "PROC_OFF": 148,
+      "PROC_ON": 108,
+      "TRADES": 30
+    },
+    "sentences": 4315,
+    "sha256": "3afea7a1aeef",
+    "train": 3688,
+    "validation": 627
+  },
+  "labels": [
+    "MAKES",
+    "TRADES",
+    "PROC_ON",
+    "PROC_OFF",
+    "CERT_ON",
+    "CERT_OFF",
+    "CERT_OTHERS",
+    "INSTRUCTION",
+    "OTHER"
+  ],
+  "max_novelty": 0.083,
+  "min_confidence": 0.517,
+  "params": {
+    "batch_size": 128,
+    "dim": 32,
+    "epochs": 14,
+    "hidden": 64,
+    "learning_rate": 0.004,
+    "seed": 7
+  },
+  "parity": {
+    "max_probability_gap": 0.0002,
+    "same_label": 1.0
+  },
+  "size": {
+    "float32_bytes": 4205092,
+    "int8_bytes": 1194532
+  },
+  "temperature": 0.5,
+  "train_seconds": 5.9,
+  "validation": {
+    "accepted_accuracy": 0.9984,
+    "accepted_share": 1.0,
+    "accuracy": 0.9984,
+    "ece": 0.0008,
+    "ece_before_scaling": 0.0017,
+    "f1": {
+      "CERT_OFF": 1.0,
+      "CERT_ON": 1.0,
+      "CERT_OTHERS": 1.0,
+      "MAKES": 0.9987,
+      "OTHER": 1.0,
+      "PROC_OFF": 1.0,
+      "PROC_ON": 1.0,
+      "TRADES": 0.8
+    },
+    "macro_f1": 0.9748,
+    "novelty_p50": 0.0
+  }
+}
